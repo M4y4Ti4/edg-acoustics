@@ -53,8 +53,8 @@ mesh_filename = os.path.join(mesh_data_folder, mesh_name)
 mesh = edg_acoustics.Mesh(mesh_filename, BC_labels)
 
 monopole_xyz = numpy.array([1.36, 3.76, 1.62])
-freq_upper_limit = 200  # Hz
-IC = edg_acoustics.Monopole_IC(monopole_xyz, freq_upper_limit)
+freq_upper_limit = 200  # this has changed 
+IC = edg_acoustics.Monopole_IC(monopole_xyz, freq_upper_limit) #this has also changed
 
 # Approximation degrees
 Nx = 4  # in space
