@@ -46,16 +46,15 @@ rho0 = 1.213  # density of air at 20 degrees Celsius in kg/m^3
 c0 = 343  # speed of sound in air at 20 degrees Celsius in m/s
 
 # Mesh
-mesh_name = "scenario1_fine.msh"
+mesh_name = "scenario1_coarse.msh"
 # mesh_data_folder is the current folder by default
 mesh_data_folder = os.path.split(os.path.abspath(__file__))[0]
 mesh_filename = os.path.join(mesh_data_folder, mesh_name)
 mesh = edg_acoustics.Mesh(mesh_filename, BC_labels)
 
 monopole_xyz = numpy.array([1.36, 3.76, 1.62])
-halfwidth = 0.075
-IC = edg_acoustics.Monopole_IC(monopole_xyz, halfwidth)
-
+freq_upper_limit = 200  # Hz
+IC = edg_acoustics.Monopole_IC(monopole_xyz, freq_upper_limit)
 
 # Approximation degrees
 Nx = 4  # in space
