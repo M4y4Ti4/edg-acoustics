@@ -4,6 +4,60 @@ import matplotlib.pyplot as plt
 import os
 import scipy.fft
 
+#plotting from raw results (without postprocessing)
+output_dir = r"C:\Masters\DGBABY\edg-acoustics\examples\scenario1\output"
+result_filename = "scenario1_coarser.mat"
+
+#loading data
+result_path = result_path = os.path.join(output_dir, result_filename)
+data = scipy.io.loadmat(result_path)
+
+prec = data["prec"]
+dt_sim = data["dt"].item()
+fs_dg = 1 / dt_sim
+fs_target = 44100
+
+print(f"Simulation dt: {dt_sim:.6f} s  =>  {fs_dg:.1f} Hz")
+print(f"prec shape: {prec.shape}")
+print(f"Duration: {prec.shape[1] * dt_sim:.2f} s")
+print(f"Runtime: {data['runtime_string']}")
+
+#plotting the unsampled, uncorrected RIR
+t_old = np.arange(prec.shape[1]) * dt_sim
+plt.plot(t_old, prec[0])
+plt.xlabel("Time (s)")
+plt.ylabel("Pressure")
+plt.title(f"Uncorrected, not resampled IR, lc = 1.5, max freq = 200")
+plt.show()
+
+#resample IR
+n_samples_new = int(prec.shape[1] * fs_target / fs_dg)
+IR_resampled = scipy.signal.resample(prec[0], n_samples_new)
+dt_resampled = 1 / fs_target
+t_resampled = np.arange(len(IR_resampled)) * dt_resampled
+
+#plot resampled, uncorrected IR
+plt.plot(t_resampled, IR_resampled)
+plt.xlabel("Time (s)")
+plt.ylabel("Pressure")
+plt.title(f"Resampled IR to 44100 Hz, lc = 1.5")
+plt.grid()
+plt.show()
+
+#apply fourier transform
+n_fft = len(IR_resampled)
+TR = scipy.fft.fft(IR_resampled, n=n_fft)
+freqs = scipy.fft.fftfreq(n_fft, dt_resampled)
+pos_idx = freqs >= 0
+
+#plotting transfer function
+plt.plot(freqs[pos_idx], 20 * np.log10(np.abs(TR[pos_idx]) + 1e-12))
+plt.xlabel("freq")
+plt.ylabel("mag")
+plt.xlim([0, 300])
+plt.title("TF")
+plt.show()
+
 
 """ to plot the result from main_HF.py
 # Load the result
@@ -35,10 +89,11 @@ for i in range(prec.shape[0]):
     plt.show()
     """
 
+"""
+#to plot the result from main.py
 
-"""to plot the result from main.py"""
 script_dir = os.path.dirname(os.path.abspath(__file__))
-result_path = os.path.join(script_dir, "result_meshcoarser.mat")
+result_path = os.path.join("C:\Masters\DGBABY\edg-acoustics\examples\scenario1\output", "result_meshcoarser.mat")
 
 print(f"Loading from: {result_path}")
 data = scipy.io.loadmat(result_path)
@@ -51,6 +106,7 @@ sampling_freq = float(data["sampling_freq"].item()) #should be 44100??
 IR_uncorrected = data["IR_Uncorrected"] #raw prec before correction
 dt_simulation = float(data["dt_simulation"].item()) #original simulation dt
 
+
 print(f"Sampling frequency: {sampling_freq} Hz")
 print(f"Simulation dt: {dt_simulation:.6f} s  =>  {1/dt_simulation:.1f} Hz")
 print(f"IR shape: {IR.shape}")
@@ -58,7 +114,7 @@ print(f"Number of receivers: {IR.shape[0]}")
 print(f"uncorrected IR shape: {IR_uncorrected.shape}")
 print(f"corrected IR shape: {IR.shape}")
 
-""" dis shit dont work
+#dis shit dont work
 #plot corrected IR
 t_new = np.arange(IR.shape[1]) * dt_new
 plt.plot(t_new, IR[0])
@@ -66,7 +122,7 @@ plt.xlabel("time (s)")
 plt.ylabel("amplitude")
 plt.title("corrected RIR (after source spectrum correction)")
 plt.show()
-"""
+
 
 #plot uncorrected (raw) IR (FROM MAIN.PY)
 t_old = np.arange(IR_uncorrected.shape[1]) * dt_simulation
@@ -117,3 +173,6 @@ plt.tight_layout()
 save_path = os.path.join("C:\Masters\DGBABY\edg-acoustics\examples\scenario1\output", "Scenario1_TF_maxfreq200_lc15.png")
 plt.savefig(save_path, dpi=150, bbox_inches="tight")
 plt.show()
+"""
+
+
