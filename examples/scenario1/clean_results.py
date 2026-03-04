@@ -2,6 +2,8 @@ import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
 import os
+import scipy.fft
+
 
 """ to plot the result from main_HF.py
 # Load the result
@@ -36,7 +38,7 @@ for i in range(prec.shape[0]):
 
 """to plot the result from main.py"""
 script_dir = os.path.dirname(os.path.abspath(__file__))
-result_path = os.path.join(script_dir, "result_plswork.mat")
+result_path = os.path.join(script_dir, "result_meshcoarser.mat")
 
 print(f"Loading from: {result_path}")
 data = scipy.io.loadmat(result_path)
@@ -56,7 +58,7 @@ print(f"Number of receivers: {IR.shape[0]}")
 print(f"uncorrected IR shape: {IR_uncorrected.shape}")
 print(f"corrected IR shape: {IR.shape}")
 
-"""
+""" dis shit dont work
 #plot corrected IR
 t_new = np.arange(IR.shape[1]) * dt_new
 plt.plot(t_new, IR[0])
@@ -93,4 +95,25 @@ plt.plot(t_resampled, IR_dg_resampled)
 plt.title("Resampled uncorrected IR")
 plt.xlabel("time (s)")
 plt.ylabel("pressure")
+plt.show()
+
+#taking FFT of resampled uncorrected IR
+
+n_fft = len(IR_dg_resampled)
+TR_uncorrected = scipy.fft.fft(IR_dg_resampled, n=n_fft)
+freqs_resampled = scipy.fft.fftfreq(n_fft, dt_resampled)
+
+#plotting the uncorrected, resampled transfer function
+pos_idx = freqs_resampled >= 0
+
+plt.figure(figsize=(12, 4))
+plt.plot(freqs_resampled[pos_idx], 20 * np.log10(np.abs(TR_uncorrected[pos_idx]) + 1e-12))
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Magnitude (dB)")
+plt.title("Transfer Function (resampled to 44100 Hz), lc = 1.5")
+plt.xlim([0, 300])
+plt.grid(True)
+plt.tight_layout()
+save_path = os.path.join("C:\Masters\DGBABY\edg-acoustics\examples\scenario1\output", "Scenario1_TF_maxfreq200_lc15.png")
+plt.savefig(save_path, dpi=150, bbox_inches="tight")
 plt.show()
