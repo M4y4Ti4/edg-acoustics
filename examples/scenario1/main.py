@@ -6,6 +6,7 @@ import glob
 import numpy
 import scipy.io
 import edg_acoustics
+import time
 
 # endregion
 
@@ -24,7 +25,8 @@ real_valued_impedance_boundary = [
     # {"label": 11, "RI": 0.9}
 ]  # extra labels for real-valued impedance boundary condition, if needed. The label should be the similar to the label in BC_labels. Since it's frequency-independent, only "RI", the real-valued reflection coefficient, is required. If not needed, just clear the elements of this list and keep the empty list.
 
-mesh_name = "scenario1_coarser.msh"  # name of the mesh file. The mesh file should be in the same folder as this script.
+mesh_used = "scenario1_coarser"
+mesh_name = f"{mesh_used}.msh"  # name of the mesh file. The mesh file should be in the same folder as this script.
 monopole_xyz = numpy.array([3.04, 2.59, 1.62])  # x,y,z coordinate of the source in the room
 freq_upper_limit = 200  # upper limit of the frequency content of the source signal in Hz. The source signal is a Gaussian pulse with a frequency content up to this limit.
 
@@ -37,11 +39,14 @@ recy = numpy.array([1.76])
 recz = numpy.array([1.62])
 rec = numpy.vstack((recx, recy, recz))  # dim:[3,n_rec]
 
-impulse_length = 2.0  # total simulation time in seconds
+impulse_length = 0.2  # total simulation time in seconds
 save_every_Nstep = 10  # save the results every N steps
 temporary_save_Nstep = 500  # save the results every N steps temporarily during the simulation. The temporary results will be saved in the root directory of this repo.
 
-result_filename = "result_plswork"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
+#define output directory
+output_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "output")
+os.makedirs(output_dir, exist_ok=True)  # creates folder if it doesn't exist
+result_filename = f"{mesh_used}"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
 
 # --------------------------------------------------------------------------------
 # Block 2: Initialize the simulation，run the simulation and save the results
@@ -100,6 +105,8 @@ sim.init_rec(
     rec, "scipy"
 )  # brute_force or scipy(default) approach to locate the receiver points in the mesh
 
+simulation_start = time.time() #tracking the time of the simulation
+
 tsi_time_integrator = edg_acoustics.TSI_TI(sim.RHS_operator, sim.dtscale, CFL, Nt=3)
 sim.init_TimeIntegrator(tsi_time_integrator)
 sim.time_integration(
@@ -109,13 +116,49 @@ sim.time_integration(
     format="mat",
 )
 
-results = edg_acoustics.Monopole_postprocessor(sim, save_every_Nstep)
-results.apply_correction()
+simulation_elapsed = time.time() - simulation_start
+seconds = int(simulation_elapsed % 60)
+print(f"Time integration: {seconds}s")
+
+#saving the raw results directly - no postprocessing
+result_path = os.path.join(output_dir, result_filename)
+scipy.io.savemat(f"{result_path}.mat", {
+    "prec": sim.prec,
+    "dt": sim.time_integrator.dt,
+    "runtime_seconds": simulation_elapsed,
+    "runtime_string": f"{seconds}s",
+    "source_xyz": sim.IC.source_xyz,
+    "halfwidth": sim.IC.halfwidth,
+    "rec": rec,
+    "c0": c0,
+    "rho0": rho0,
+    "mesh_name": mesh_name,
+    "Nx": Nx,
+    "CFL": CFL,
+    "N_tets": sim.N_tets,
+    "impulse_length": impulse_length,
+})
+
+print(f"Results saved to: {result_path}.mat")  # this was also wrong before
+print("Finished!")
 
 
-result_filename = os.path.join(os.path.split(os.path.abspath(__file__))[0], result_filename)
+"""
+#results = edg_acoustics.Monopole_postprocessor(sim, 1)
+#results.apply_resample()
+
+print(f"halfwidth: {sim.IC.halfwidth}")
+print(f"source_xyz: {sim.IC.source_xyz}")
+print(f"rec: {sim.rec}")
+
+result_filename = os.path.join(output_dir, result_filename)
 results.write_results(result_filename, "mat")
+
+mat_data = scipy.io.loadmat(f"{result_filename}.mat")
+mat_data["runtime_seconds"] = simulation_elapsed
+scipy.io.savemat(f"{result_filename}.mat", mat_data)
 # load newresult.npy
 # data = numpy.load("./examples/newresult.npz", allow_pickle=True)
 # tempdata = numpy.load("./results_on_the_run.npz", allow_pickle=True)
 print("Finished!")
+"""
