@@ -1,63 +1,120 @@
+"""Compare TF and IR across different mesh resolutions."""
+
 import numpy as np
 import scipy.io
+import scipy.signal
+import scipy.fft
 import matplotlib.pyplot as plt
 import os
-import scipy.fft
 
-#plotting from raw results (without postprocessing)
-output_dir = r"C:\Masters\DGBABY\edg-acoustics\examples\scenario1\output"
-result_filename = "scenario1_coarser.mat"
+# ---- Config ----
+OUTPUT_DIR = r"C:\Masters\DGBABY\edg-acoustics\examples\scenario1\output"
+FS_TARGET = 44100
+FREQ_LIMIT = 300
 
-#loading data
-result_path = result_path = os.path.join(output_dir, result_filename)
-data = scipy.io.loadmat(result_path)
+# Define files and their labels
+RUNS = {
+    "lc = 1.5": "scenario1_lc15_CFL05_freq200_2s.mat",
+    "lc = 1.0": "scenario1_lc1_CFL05_freq200_2s.mat",
+}
 
-prec = data["prec"]
-dt_sim = data["dt"].item()
-fs_dg = 1 / dt_sim
-fs_target = 44100
 
-print(f"Simulation dt: {dt_sim:.6f} s  =>  {fs_dg:.1f} Hz")
-print(f"prec shape: {prec.shape}")
-print(f"Duration: {prec.shape[1] * dt_sim:.2f} s")
-print(f"Runtime: {data['runtime_string']}")
+# ---- Functions ----
 
-#plotting the unsampled, uncorrected RIR
-t_old = np.arange(prec.shape[1]) * dt_sim
-plt.plot(t_old, prec[0])
+def load_and_process(output_dir, filename, fs_target):
+    """Load, resample and compute TF for a single result file."""
+    path = os.path.join(output_dir, filename)
+    data = scipy.io.loadmat(path)
+
+    prec = data["prec"]
+    dt_sim = data["dt"].item()
+    fs_dg = 1 / dt_sim
+
+    # Time axis (raw)
+    t_raw = np.arange(prec.shape[1]) * dt_sim
+
+    # Resample
+    n_samples_new = int(prec.shape[1] * fs_target / fs_dg)
+    IR_resampled = scipy.signal.resample(prec[0], n_samples_new)
+    dt_resampled = 1 / fs_target
+    t_resampled = np.arange(len(IR_resampled)) * dt_resampled
+
+    # Transfer function
+    n_fft = len(IR_resampled)
+    TR = scipy.fft.fft(IR_resampled, n=n_fft)
+    freqs = scipy.fft.fftfreq(n_fft, dt_resampled)
+    pos_idx = freqs >= 0
+
+    print(f"Loaded: {filename} | {fs_dg:.1f} Hz | {prec.shape[1]} samples | {t_raw[-1]:.2f} s")
+
+    return {
+        "t_raw": t_raw,
+        "prec": prec[0],
+        "t_resampled": t_resampled,
+        "IR_resampled": IR_resampled,
+        "TR": TR,
+        "freqs": freqs,
+        "pos_idx": pos_idx,
+    }
+
+
+# ---- Load all runs ----
+results = {}
+for label, filename in RUNS.items():
+    try:
+        results[label] = load_and_process(OUTPUT_DIR, filename, FS_TARGET)
+    except FileNotFoundError:
+        print(f"WARNING: {filename} not found, skipping.")
+
+
+# ---- Plot overlaid raw IR ----
+plt.figure(figsize=(12, 4))
+for label, res in results.items():
+    plt.plot(res["t_raw"], res["prec"], label=label, alpha=0.8)
 plt.xlabel("Time (s)")
 plt.ylabel("Pressure")
-plt.title(f"Uncorrected, not resampled IR, lc = 1.5, max freq = 200")
+plt.title("Raw IR comparison")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_DIR, "compare_raw_IR_lc1_lc1.5.png"), dpi=150, bbox_inches="tight")
 plt.show()
 
-#resample IR
-n_samples_new = int(prec.shape[1] * fs_target / fs_dg)
-IR_resampled = scipy.signal.resample(prec[0], n_samples_new)
-dt_resampled = 1 / fs_target
-t_resampled = np.arange(len(IR_resampled)) * dt_resampled
 
-#plot resampled, uncorrected IR
-plt.plot(t_resampled, IR_resampled)
+# ---- Plot overlaid resampled IR ----
+plt.figure(figsize=(12, 4))
+for label, res in results.items():
+    plt.plot(res["t_resampled"], res["IR_resampled"], label=label, alpha=0.8)
 plt.xlabel("Time (s)")
 plt.ylabel("Pressure")
-plt.title(f"Resampled IR to 44100 Hz, lc = 1.5")
-plt.grid()
+plt.title(f"Resampled IR comparison @ {FS_TARGET} Hz")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_DIR, "compare_resampled_IR_lc1_lc1.5.png"), dpi=150, bbox_inches="tight")
 plt.show()
 
-#apply fourier transform
-n_fft = len(IR_resampled)
-TR = scipy.fft.fft(IR_resampled, n=n_fft)
-freqs = scipy.fft.fftfreq(n_fft, dt_resampled)
-pos_idx = freqs >= 0
 
-#plotting transfer function
-plt.plot(freqs[pos_idx], 20 * np.log10(np.abs(TR[pos_idx]) + 1e-12))
-plt.xlabel("freq")
-plt.ylabel("mag")
-plt.xlim([0, 300])
-plt.title("TF")
+# ---- Plot overlaid Transfer Functions ----
+plt.figure(figsize=(12, 4))
+for label, res in results.items():
+    plt.plot(
+        res["freqs"][res["pos_idx"]],
+        20 * np.log10(np.abs(res["TR"][res["pos_idx"]]) + 1e-12),
+        label=label,
+        alpha=0.8
+    )
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Magnitude (dB)")
+plt.title("Transfer Function comparison")
+plt.xlim([0, FREQ_LIMIT])
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_DIR, "compare_TF_lc1_lc1.5.png"), dpi=150, bbox_inches="tight")
 plt.show()
 
+print("Done!")
 
 """ to plot the result from main_HF.py
 # Load the result

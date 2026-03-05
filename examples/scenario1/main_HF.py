@@ -88,5 +88,9 @@ prec = sim.time_integration(total_time=ToT, delta_step=2)
 
 # Save prec to Matlab format file
 result_filename = os.path.join(os.path.split(os.path.abspath(__file__))[0], "result.mat")
-scipy.io.savemat(result_filename, {"prec": prec})
+scipy.io.savemat(result_filename, {"prec": prec
+                                   "dt": sim.tsi_time_integrator.dt,
+                                   "rec": rec,
+                                   "c0": c0
+                                   "rho0": rho0})
 print("Finished!")
