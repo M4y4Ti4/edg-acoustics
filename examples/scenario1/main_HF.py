@@ -46,7 +46,7 @@ rho0 = 1.213  # density of air at 20 degrees Celsius in kg/m^3
 c0 = 343  # speed of sound in air at 20 degrees Celsius in m/s
 
 # Mesh
-mesh_name = "scenario1_coarse.msh"
+mesh_name = "scenario1_fine.msh"
 # mesh_data_folder is the current folder by default
 mesh_data_folder = os.path.split(os.path.abspath(__file__))[0]
 mesh_filename = os.path.join(mesh_data_folder, mesh_name)
@@ -59,14 +59,14 @@ IC = edg_acoustics.Monopole_IC(monopole_xyz, freq_upper_limit) #this has also ch
 # Approximation degrees
 Nx = 4  # in space
 Nt = 3  # in time
-CFL = 0.9  # CFL number, default is 0.5.
+CFL = 0.8  # CFL number, default is 0.5.
 recx = numpy.array([4.26])
 # recx = numpy.array([0.2])
 recy = numpy.array([1.76])
 recz = numpy.array([1.62])
 rec = numpy.vstack((recx, recy, recz))  # dim:[3,n_rec]
 
-ToT = 0.2  # total simulation time in seconds
+ToT = 1.0  # total simulation time in seconds
 
 sim = edg_acoustics.AcousticsSimulation(rho0, c0, Nx, mesh, BC_labels)
 
@@ -87,7 +87,7 @@ prec = sim.time_integration(total_time=ToT, delta_step=2)
 
 
 # Save prec to Matlab format file
-result_filename = os.path.join(os.path.split(os.path.abspath(__file__))[0], "result.mat")
+result_filename = os.path.join(os.path.split(os.path.abspath(__file__))[0], "scenario1_fine.mat")
 scipy.io.savemat(result_filename, {"prec": prec
                                    "dt": sim.tsi_time_integrator.dt,
                                    "rec": rec,

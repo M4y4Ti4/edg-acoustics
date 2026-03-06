@@ -39,14 +39,14 @@ recy = numpy.array([1.76])
 recz = numpy.array([1.62])
 rec = numpy.vstack((recx, recy, recz))  # dim:[3,n_rec]
 
-impulse_length = 0.2  # total simulation time in seconds
+impulse_length = 2.0  # total simulation time in seconds
 save_every_Nstep = 10  # save the results every N steps
 temporary_save_Nstep = 500  # save the results every N steps temporarily during the simulation. The temporary results will be saved in the root directory of this repo.
 
 #define output directory
 output_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "output")
 os.makedirs(output_dir, exist_ok=True)  # creates folder if it doesn't exist
-result_filename = f"{mesh_used}"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
+result_filename = "scenario1_lc15_CFL05_freq200_2s"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
 
 # --------------------------------------------------------------------------------
 # Block 2: Initialize the simulation，run the simulation and save the results
@@ -117,8 +117,11 @@ sim.time_integration(
 )
 
 simulation_elapsed = time.time() - simulation_start
+
+hours = int(simulation_elapsed // 3600)
+minutes = int((simulation_elapsed % 3600) // 60)
 seconds = int(simulation_elapsed % 60)
-print(f"Time integration: {seconds}s")
+print(f"Time integration: {hours}h {minutes}m {seconds}s")
 
 #saving the raw results directly - no postprocessing
 result_path = os.path.join(output_dir, result_filename)
