@@ -25,28 +25,28 @@ real_valued_impedance_boundary = [
     # {"label": 11, "RI": 0.9}
 ]  # extra labels for real-valued impedance boundary condition, if needed. The label should be the similar to the label in BC_labels. Since it's frequency-independent, only "RI", the real-valued reflection coefficient, is required. If not needed, just clear the elements of this list and keep the empty list.
 
-mesh_used = "scenario1_coarser"
+mesh_used = "scenario1_coarse"
 mesh_name = f"{mesh_used}.msh"  # name of the mesh file. The mesh file should be in the same folder as this script.
 monopole_xyz = numpy.array([3.04, 2.59, 1.62])  # x,y,z coordinate of the source in the room
-freq_upper_limit = 200  # upper limit of the frequency content of the source signal in Hz. The source signal is a Gaussian pulse with a frequency content up to this limit.
+freq_upper_limit = 100  # upper limit of the frequency content of the source signal in Hz. The source signal is a Gaussian pulse with a frequency content up to this limit.
 
 # Approximation degrees
 Nx = 4  # in space
 Nt = 4  # in time
 CFL = 0.5  # CFL number, default is 0.5.
-recx = numpy.array([4.26])
+recx = numpy.array([4.00])
 recy = numpy.array([1.76])
 recz = numpy.array([1.62])
 rec = numpy.vstack((recx, recy, recz))  # dim:[3,n_rec]
 
-impulse_length = 2.0  # total simulation time in seconds
-save_every_Nstep = 10  # save the results every N steps
+impulse_length = 0.2  # total simulation time in seconds
+save_every_Nstep = 1  # save the results every N steps
 temporary_save_Nstep = 500  # save the results every N steps temporarily during the simulation. The temporary results will be saved in the root directory of this repo.
 
 #define output directory
 output_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "output")
 os.makedirs(output_dir, exist_ok=True)  # creates folder if it doesn't exist
-result_filename = "scenario1_lc15_CFL05_freq200_2s"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
+result_filename = "scenario1_lc1_CFL05_freq100_0.2s_postprocess"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
 
 # --------------------------------------------------------------------------------
 # Block 2: Initialize the simulation，run the simulation and save the results
@@ -125,6 +125,7 @@ print(f"Time integration: {hours}h {minutes}m {seconds}s")
 
 #saving the raw results directly - no postprocessing
 result_path = os.path.join(output_dir, result_filename)
+"""
 scipy.io.savemat(f"{result_path}.mat", {
     "prec": sim.prec,
     "dt": sim.time_integrator.dt,
@@ -141,14 +142,14 @@ scipy.io.savemat(f"{result_path}.mat", {
     "N_tets": sim.N_tets,
     "impulse_length": impulse_length,
 })
-
-print(f"Results saved to: {result_path}.mat")  # this was also wrong before
-print("Finished!")
-
-
 """
-#results = edg_acoustics.Monopole_postprocessor(sim, 1)
-#results.apply_resample()
+
+
+
+results = edg_acoustics.Monopole_postprocessor(sim, save_every_Nstep)
+results.apply_correction()
+
+
 
 print(f"halfwidth: {sim.IC.halfwidth}")
 print(f"source_xyz: {sim.IC.source_xyz}")
@@ -164,4 +165,3 @@ scipy.io.savemat(f"{result_filename}.mat", mat_data)
 # data = numpy.load("./examples/newresult.npz", allow_pickle=True)
 # tempdata = numpy.load("./results_on_the_run.npz", allow_pickle=True)
 print("Finished!")
-"""

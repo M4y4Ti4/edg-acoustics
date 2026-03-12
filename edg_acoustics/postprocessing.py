@@ -97,13 +97,15 @@ class Monopole_postprocessor:
         else:
             n_samples = self.IRnew.shape[1]
 
-        n_samples = scipy.fft.next_fast_len(self.IRnew.shape[1])
         self.TR_original = scipy.fft.fft(self.IRnew, n=n_samples, axis=1)
         self.TR_free = scipy.fft.fft(p_free, n=n_samples, axis=1)
         self.freqs = scipy.fft.fftfreq(n_samples, self.dt_new)
         wavenumber = 2 * numpy.pi * self.freqs / self.sim.c0
         monopole = numpy.exp(-1j * wavenumber * R) / (4 * numpy.pi * R)
-        self.TR = self.TR_original / self.TR_free * monopole
+        #self.TR = self.TR_original / self.TR_free * monopole
+        epsilon = 1e-6 * numpy.max(numpy.abs(self.TR_free)**2)
+        self.TR = (self.TR_original * numpy.conj(self.TR_free) / 
+                (numpy.abs(self.TR_free)**2 + epsilon)) * monopole
         self.IRnew = numpy.real(scipy.fft.ifft(self.TR))
 
         return self.IRnew, self.TR, self.freqs
