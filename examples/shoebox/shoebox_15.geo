@@ -1,5 +1,5 @@
 Mesh.MshFileVersion = 2.2;
-lc = 1.5;
+lc = 2.5;
 
 // Shoebox Room: 5m (x) x 4m (y) x 3m (z)
 // Matches Room.create_shoebox([5, 4, 3], ...)
