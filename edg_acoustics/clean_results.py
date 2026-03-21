@@ -10,13 +10,13 @@ import os
 # ---- Config ----
 OUTPUT_DIR = r"C:\Masters\DGBABY\edg-acoustics\examples\shoebox\output"
 FS_TARGET = 44100
-FREQ_LIMIT = 150
+FREQ_LIMIT = 200
 ROOM_DIMS = [5, 4, 3]
 c0 = 343.0
 
 # Define files and their labels
 RUNS = {
-    "lc = 0.8": "shoebox_lc08_freq100_2s.mat"
+    "lc = 1.0": "shoebox_lc1_freq200_2s_highabs.mat"
 }
 
 def compute_room_modes(room_dims, c0=343.0, f_max=150, n_modes = 5):
@@ -70,7 +70,7 @@ def apply_correction(prec, dt_sim, source_xyz, rec_xyz, c0=343.0, halfwidth=None
     monopole   = np.exp(-1j * wavenumber * R) / (4 * np.pi * R)
 
     # Regularised deconvolution with frequency mask
-    f_max     = 200.0
+    f_max     = 300.0
     epsilon   = 1e-4 * np.max(np.abs(TR_free)**2)
     freq_mask = freqs <= f_max
 
@@ -132,6 +132,7 @@ def load_and_process(output_dir, filename, fs_target):
     corrected = apply_correction(prec, dt_sim, source_xyz = source_pos, rec_xyz = rec_pos, halfwidth = halfwidth)
         
     IR_corrected = corrected["IR_corrected"]
+    TR_corrected = corrected["TR_corrected"]
 
     # Time axis (raw)
     t_raw = np.arange(len(prec)) * dt_sim
@@ -158,6 +159,7 @@ def load_and_process(output_dir, filename, fs_target):
         "freqs": freqs,
         "pos_idx": pos_idx,
         "corrected": corrected,
+        "TR_corrected": TR_corrected
     }
 
 # ---- Load all runs ----
@@ -173,11 +175,12 @@ for label, res in results.items():
     
     # Save as .npz (numpy format)
     np.savez(
-        os.path.join(OUTPUT_DIR, f"TR_corrected_lc1_200Hz_2s{safe_label}.npz"),
+        os.path.join(OUTPUT_DIR, f"TR_corrected_lc1_200Hz_2s_highabs{safe_label}.npz"),
         TR=res["TR"],
         freqs=res["freqs"],
         IR_resampled=res["IR_resampled"],
-        t_resampled=res["t_resampled"]
+        t_resampled=res["t_resampled"],
+        TR_corrected = res["TR_corrected"]
     )
 
 modes = compute_room_modes(ROOM_DIMS, c0=c0, f_max = FREQ_LIMIT)
@@ -220,15 +223,15 @@ for label, res in results.items():
         label=label, alpha=0.8
     )
 
-for f_mode, nx, ny, nz in modes:
-    ax.axvline(x=f_mode, color='red', alpha=0.3, linewidth=0.8, linestyle='--')
+for i, (f_mode, nx, ny, nz) in enumerate(modes):
+    ax.axvline(x=f_mode, color='red', alpha=0.3, linewidth=0.8, linestyle='--', label= 'theoretical room modes' if i == 0 else '_nolegend_')
     ax.text(f_mode, -58, f"({nx},{ny},{nz})", fontsize=5, rotation=90,
             color='red', ha='center', va='bottom')
 
-ax.set_xlabel("Frequency (Hz)")
-ax.set_ylabel("Magnitude (dB)")
-ax.set_title(f"DG Transfer Function with Theoretical Room Modes ({ROOM_DIMS[0]}x{ROOM_DIMS[1]}x{ROOM_DIMS[2]}m)")
-ax.set_xlim(0, FREQ_LIMIT)
+ax.set_xlabel("Frequency (Hz)", fontsize = '12')
+ax.set_ylabel("Magnitude (dB)", fontsize = '12')
+ax.set_title(f"DG Transfer Function with Theoretical Room Modes ({ROOM_DIMS[0]}x{ROOM_DIMS[1]}x{ROOM_DIMS[2]}m)", fontsize = '14')
+ax.set_xlim(0, 250)
 ax.set_ylim(-60, 10)
 ax.legend()
 ax.grid(True, which='both', alpha=0.3)
@@ -281,7 +284,7 @@ plt.xlabel("Frequency (Hz)")
 plt.ylabel("Magnitude (dB)")
 plt.title("Corrected TF (before resampling, at simulation fs)")
 plt.xlim([0, 250])  # only plot up to f_max
-plt.ylim(-60, 10)
+plt.ylim(-80, 0)
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
