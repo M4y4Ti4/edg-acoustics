@@ -1,4 +1,4 @@
-""" This is the main script for the scenario 1."""
+""" This is the main script for the shoebox"""
 
 # region Import Libraries
 import os
@@ -28,7 +28,7 @@ real_valued_impedance_boundary = [
     {"label": 11, "RI": 0.9592},
 ]# extra labels for real-valued impedance boundary condition, if needed. The label should be the similar to the label in BC_labels. Since it's frequency-independent, only "RI", the real-valued reflection coefficient, is required. If not needed, just clear the elements of this list and keep the empty list.
 
-mesh_used = "shoebox_lc1"
+mesh_used = "shoebox_lc25"
 mesh_name = f"{mesh_used}.msh"  # name of the mesh file. The mesh file should be in the same folder as this script.
 monopole_xyz = numpy.array([3.04, 2.59, 1.62])  # x,y,z coordinate of the source in the room
 freq_upper_limit = 200  # upper limit of the frequency content of the source signal in Hz. The source signal is a Gaussian pulse with a frequency content up to this limit.
@@ -49,7 +49,7 @@ temporary_save_Nstep = 500  # save the results every N steps temporarily during 
 #define output directory
 output_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "output")
 os.makedirs(output_dir, exist_ok=True)  # creates folder if it doesn't exist
-result_filename = "shoebox_lc1_freq200_2s"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
+result_filename = "shoebox_lc25_freq200_2s"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
 
 # --------------------------------------------------------------------------------
 # Block 2: Initialize the simulation，run the simulation and save the results
