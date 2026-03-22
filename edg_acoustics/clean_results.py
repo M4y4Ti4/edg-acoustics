@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import os
 
 # ---- Config ----
-OUTPUT_DIR = r"C:\Masters\DGBABY\edg-acoustics\examples\shoebox\output"
+OUTPUT_DIR = r"C:\Masters\DGsim\edg-acoustics\examples\shoebox\output"
 FS_TARGET = 44100
 FREQ_LIMIT = 200
 ROOM_DIMS = [5, 4, 3]
