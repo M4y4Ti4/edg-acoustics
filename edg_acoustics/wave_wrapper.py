@@ -9,6 +9,7 @@ import numpy
 import scipy.io
 import edg_acoustics
 import time
+from edg_acoustics.clean_results import post_process_output
 
 def run_wave(mesh_input, max_freq, recx, recy, recz, source_pos, rir_duration,):
 
@@ -81,6 +82,20 @@ def run_wave(mesh_input, max_freq, recx, recy, recz, source_pos, rir_duration,):
 
     simulation_elapsed = time.time() - simulation_start
 
+    prec = sim.prec.squeeze()
+    dt_sim = sim.time_integrator.dt
+    fs_dg = 1/dt_sim
+    halfwidth = float(sim.IC.halfwidth)
+    source_xyz = sim.IC.source_xyz.squeeze()
+    rec_xyz = rec.squeeze()
+
+
+    processed_res = post_process_output(prec=prec, dt_sim=dt_sim, source_xyz=source_xyz, rec_xyz=rec_xyz, halfwidth=halfwidth, fs_target=44100)
+    IR_resampled = processed_res["IR"]
+    TF_resampled = processed_res["TF"]
+    t_resampled = processed_res["t_resampled"]
+    freqs = processed_res["freqs"]
+
     return {
         "prec": sim.prec,
         "dt": sim.time_integrator.dt,
@@ -94,5 +109,10 @@ def run_wave(mesh_input, max_freq, recx, recy, recz, source_pos, rir_duration,):
         "Nx": Nx,
         "CFL": CFL,
         "N_tets": sim.N_tets,
-        "impulse_length": impulse_length
+        "impulse_length": impulse_length,
+        "IR_resampled": IR_resampled,
+        "TF_resampled": TF_resampled, 
+        "t_resampled": t_resampled,
+        "freqs": freqs
+
     }

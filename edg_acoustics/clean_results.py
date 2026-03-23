@@ -56,10 +56,6 @@ def apply_correction(prec, dt_sim, source_xyz, rec_xyz, c0=343.0, halfwidth=None
         np.exp(-np.log(2) * (R + c0 * time_vector)**2 / halfwidth**2)
     )
 
-    print(f"R={R:.3f}m, halfwidth={halfwidth:.4f}")
-    print(f"p_free[0]={p_free[0]:.6f}, prec[0]={prec[0]:.6f}, ratio={prec[0]/p_free[0]:.4f}")
-    print(f"p_free peak at t={time_vector[np.argmax(p_free)]*1000:.2f}ms, expected {R/c0*1000:.2f}ms")
-
     # FFT
     TR_original = scipy.fft.rfft(prec)
     TR_free     = scipy.fft.rfft(p_free)
@@ -92,8 +88,7 @@ def apply_correction(prec, dt_sim, source_xyz, rec_xyz, c0=343.0, halfwidth=None
         window[t_end:] = 0.0
     IR_corrected *= window
 
-    print(f"IR peak value: {np.max(np.abs(IR_corrected)):.6f}")
-    print(f"IR peak time:  {time_vector[np.argmax(np.abs(IR_corrected))]*1000:.2f}ms")
+    
 
     return {
         "IR_corrected": IR_corrected,
@@ -103,6 +98,7 @@ def apply_correction(prec, dt_sim, source_xyz, rec_xyz, c0=343.0, halfwidth=None
         "freqs":        freqs,
         "p_free":       p_free,
     }
+
 def load_and_process(output_dir, filename, fs_target):
     """Load, resample and compute TF for a single result file."""
     path = os.path.join(output_dir, filename)
@@ -149,18 +145,46 @@ def load_and_process(output_dir, filename, fs_target):
     freqs = scipy.fft.fftfreq(n_fft, dt_resampled)
     pos_idx = freqs >= 0
 
+    return {
+    "t_raw": t_raw,
+    "prec": prec,
+    "t_resampled": t_resampled,
+    "IR_resampled": IR_resampled,
+    "TR": TR,
+    "freqs": freqs,
+    "pos_idx": pos_idx,
+    "corrected": corrected,
+    "TR_corrected": TR_corrected
+}
+
+
+def post_process_output(prec, dt_sim, source_xyz, rec_xyz, halfwidth, fs_target=44100):
+    """Same as load_and_process but accepts data directly instead of loading from file"""
+    import numpy 
+    fs_dg = 1 / dt_sim
+    
+    corrected = apply_correction(prec, dt_sim, source_xyz=source_xyz, rec_xyz=rec_xyz, halfwidth=halfwidth)
+    
+    IR_corrected = corrected["IR_corrected"]
+    
+    # Resample
+    n_samples_new = int(len(IR_corrected) * fs_target / fs_dg)
+    IR_resampled  = scipy.signal.resample(IR_corrected, n_samples_new)
+    t_resampled   = numpy.arange(len(IR_resampled)) / fs_target
+
+    n_fft = len(IR_resampled)
+    TF = scipy.fft.fft(IR_resampled, n=n_fft)
+    freqs = scipy.fft.rfftfreq(n_fft, 1/fs_target)
 
     return {
-        "t_raw": t_raw,
-        "prec": prec,
+        "IR": IR_resampled,
+        "TF": TF,
         "t_resampled": t_resampled,
-        "IR_resampled": IR_resampled,
-        "TR": TR,
         "freqs": freqs,
-        "pos_idx": pos_idx,
-        "corrected": corrected,
-        "TR_corrected": TR_corrected
+        "fs": fs_target
     }
+
+"""
 
 # ---- Load all runs ----
 results = {}
@@ -292,7 +316,7 @@ plt.show()
 
 
 
-""" to plot the result from main_HF.py
+ to plot the result from main_HF.py
 # Load the result
 script_dir = os.path.dirname(os.path.abspath(__file__))
 result_path = os.path.join(script_dir, "result.mat")
