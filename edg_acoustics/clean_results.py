@@ -99,9 +99,9 @@ def apply_correction(prec, dt_sim, source_xyz, rec_xyz, c0=343.0, halfwidth=None
         "p_free":       p_free,
     }
 
-def load_and_process(output_dir, filename, fs_target):
+def load_and_process(path, fs_target):
     """Load, resample and compute TF for a single result file."""
-    path = os.path.join(output_dir, filename)
+    #path = os.path.join(output_dir, filename)
     data = scipy.io.loadmat(path)
     prec = data["prec"].squeeze()
     dt_sim = data["dt"].item()
@@ -183,5 +183,19 @@ def post_process_output(prec, dt_sim, source_xyz, rec_xyz, halfwidth, fs_target=
         "freqs": freqs,
         "fs": fs_target
     }
+
+
+clean = load_and_process(r"C:\Masters\Hybrid\hybridsim\results\shoebox_lc08_freq300_2s.mat", fs_target=44100)
+
+IR_resampled = clean["IR_resampled"]
+t_resampled = clean["t_resampled"]
+freqs = clean["freqs"]
+TF_corrected = clean["TR_corrected"]
+
+np.savez(r"C:\Masters\Hybrid\hybridsim\results\processed_data.npz",
+         IR_resampled=IR_resampled,
+         t_resampled=t_resampled,
+         freqs=freqs,
+         TF_corrected=TF_corrected)
 
 
