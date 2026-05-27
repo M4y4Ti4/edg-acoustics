@@ -154,7 +154,8 @@ def load_and_process(path, fs_target):
     "freqs": freqs,
     "pos_idx": pos_idx,
     "corrected": corrected,
-    "TR_corrected": TR_corrected
+    "TR_corrected": TR_corrected,
+    "raw_IR": prec
 }
 
 
@@ -185,14 +186,17 @@ def post_process_output(prec, dt_sim, source_xyz, rec_xyz, halfwidth, fs_target=
     }
 
 
-clean = load_and_process(r"C:\Masters\Hybrid\hybridsim\results\shoebox_lc08_freq300_2s.mat", fs_target=44100)
+clean = load_and_process(r"C:\Masters\Hybrid\hybridsim\results\pos1\shoebox_lc05_freq300_2s_avabs_carpet_pos1.mat", fs_target=44100)
 
 IR_resampled = clean["IR_resampled"]
 t_resampled = clean["t_resampled"]
+t_raw = clean["t_raw"]
 freqs = clean["freqs"]
 TF_corrected = clean["TR_corrected"]
+raw_IR = clean["raw_IR"]
 
-np.savez(r"C:\Masters\Hybrid\hybridsim\results\processed_data.npz",
+
+np.savez(r"C:\Masters\Hybrid\hybridsim\results\pos1\shoebox_lc05_freq300_2s_avabs_carpet_pos1.mat",
          IR_resampled=IR_resampled,
          t_resampled=t_resampled,
          freqs=freqs,

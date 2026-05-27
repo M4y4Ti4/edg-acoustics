@@ -29,7 +29,7 @@ real_valued_impedance_boundary = [
     {"label": 3, "RI": 0.9592},
 ]# extra labels for real-valued impedance boundary condition, if needed. The label should be the similar to the label in BC_labels. Since it's frequency-independent, only "RI", the real-valued reflection coefficient, is required. If not needed, just clear the elements of this list and keep the empty list.
 
-mesh_used = "room_with_wall_fixed"
+mesh_used = "room_with_wall_25"
 mesh_name = f"{mesh_used}.msh"  # name of the mesh file. The mesh file should be in the same folder as this script.
 monopole_xyz = numpy.array([-1.04, 2.5, 1.62])  # x,y,z coordinate of the source in the room
 freq_upper_limit = 100  # upper limit of the frequency content of the source signal in Hz. The source signal is a Gaussian pulse with a frequency content up to this limit.
@@ -43,14 +43,14 @@ recy = numpy.array([2.5])
 recz = numpy.array([1.62])
 rec = numpy.vstack((recx, recy, recz))  # dim:[3,n_rec]
 
-impulse_length = 2.0  # total simulation time in seconds
+impulse_length = 0.1  # total simulation time in seconds
 save_every_Nstep = 1  # save the results every N steps
 temporary_save_Nstep = 500  # save the results every N steps temporarily during the simulation. The temporary results will be saved in the root directory of this repo.
 
 #define output directory
 output_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "output")
 os.makedirs(output_dir, exist_ok=True)  # creates folder if it doesn't exist
-result_filename = "shoebox_lc25_freq200_2s"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
+result_filename = "wall_lc25_freq100_2s"  # name of the result file. The result file will be saved in the same folder as this script. The result file will be saved in .mat format.
 
 # --------------------------------------------------------------------------------
 # Block 2: Initialize the simulation，run the simulation and save the results
