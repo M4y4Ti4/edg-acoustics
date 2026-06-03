@@ -1,21 +1,22 @@
 #convert geo file to msh file 
 
-"""
+
 import gmsh
 gmsh.initialize()
 gmsh.open(r"C:\Masters\Hybrid\DGsim\examples\wall\room_with_wall.geo")
 gmsh.model.mesh.generate(3)
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
-gmsh.write(r"C:\Masters\Hybrid\DGsim\examples\wall\room_with_wall.msh")
+gmsh.write(r"C:\Masters\Hybrid\DGsim\examples\wall\room_with_wall_05_new.msh")
 gmsh.finalize()
 print("Done!")
+
 """
-"""
+
 import gmsh
 import meshio
 
 gmsh.initialize()
-gmsh.model.add("room_with_wall_25")
+gmsh.model.add("room_with_wall_05")
 
 # Use OpenCASCADE kernel
 factory = gmsh.model.occ
@@ -58,7 +59,7 @@ print(f"Floor surfaces:   {floor_tags}")
 print(f"Ceiling surfaces: {ceiling_tags}")
 
 # Set mesh size
-lc = 2.5
+lc = 0.5
 gmsh.model.mesh.setSize(gmsh.model.getEntities(0), lc)
 
 # Generate 3D mesh
@@ -74,25 +75,17 @@ gmsh.model.addPhysicalGroup(3, vol_tags,     name="air")
 gmsh.model.addPhysicalGroup(2, floor_tags,   name="carpet")
 gmsh.model.addPhysicalGroup(2, ceiling_tags, name="ceiling")
 
-gmsh.write("room_with_wall_25.msh")
+gmsh.write("room_with_wall_05.msh")
 gmsh.finalize()
 
-# Verify
-m = meshio.read("room_with_wall.msh")
-print("\nCell types:", list(m.cells_dict.keys()))
-for k, v in m.cells_dict.items():
-    print(f"  {k}: {len(v)} elements")
 
-Fix MSH file dtype issue that causes scipy Delaunay to fail.
-Run this after generating room_with_wall.msh with the OpenCASCADE script.
-It rewrites the mesh with float64 node coordinates and int32 element indices.
 """
-
+"""
 import meshio
 import numpy as np
  
-input_path  = r"C:\Masters\Hybrid\DGsim\examples\wall\room_with_wall_25.msh"
-output_path = r"C:\Masters\Hybrid\DGsim\examples\wall\room_with_wall_25.msh"
+input_path  = r"C:\Masters\Hybrid\DGsim\examples\wall\room_with_wall_05.msh"
+output_path = r"C:\Masters\Hybrid\DGsim\examples\wall\room_with_wall_05.msh"
  
 print(f"Reading {input_path}...")
 mesh = meshio.read(input_path)
@@ -122,3 +115,5 @@ print(f"Num tets:      {next(c.data.shape[0] for c in mesh.cells if c.type == 't
 meshio.write(output_path, mesh, file_format="gmsh22")
 print(f"Fixed mesh written to {output_path}")
 print("Update mesh_name in wall_main.py to 'room_with_wall_fixed_25.msh'")
+
+"""

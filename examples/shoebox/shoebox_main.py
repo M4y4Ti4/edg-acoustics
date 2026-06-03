@@ -28,7 +28,7 @@ real_valued_impedance_boundary = [
     {"label": 11, "RI": 0.9592},
 ]# extra labels for real-valued impedance boundary condition, if needed. The label should be the similar to the label in BC_labels. Since it's frequency-independent, only "RI", the real-valued reflection coefficient, is required. If not needed, just clear the elements of this list and keep the empty list.
 
-mesh_used = "shoebox_lc25"
+mesh_used = "oculus_scenario_1"
 mesh_name = f"{mesh_used}.msh"  # name of the mesh file. The mesh file should be in the same folder as this script.
 monopole_xyz = numpy.array([3.04, 2.59, 1.62])  # x,y,z coordinate of the source in the room
 freq_upper_limit = 200  # upper limit of the frequency content of the source signal in Hz. The source signal is a Gaussian pulse with a frequency content up to this limit.
