@@ -25,17 +25,17 @@ real_valued_impedance_boundary = [
     # {"label": 11, "RI": 0.9}
 ]  # extra labels for real-valued impedance boundary condition, if needed. The label should be the similar to the label in BC_labels. Since it's frequency-independent, only "RI", the real-valued reflection coefficient, is required. If not needed, just clear the elements of this list and keep the empty list.
 
-mesh_used = "oculus_scenario_1"
+mesh_used = "oculus_scenario_1_lc05"
 mesh_name = f"{mesh_used}.msh"  # name of the mesh file. The mesh file should be in the same folder as this script.
-monopole_xyz = numpy.array([3.04, 2.59, 1.62])  # x,y,z coordinate of the source in the room
+monopole_xyz = numpy.array([1.36, 3.76, 1.62])  # x,y,z coordinate of the source in the room
 freq_upper_limit = 100  # upper limit of the frequency content of the source signal in Hz. The source signal is a Gaussian pulse with a frequency content up to this limit.
 
 # Approximation degrees
 Nx = 4  # in space
 Nt = 4  # in time
 CFL = 0.5  # CFL number, default is 0.5.
-recx = numpy.array([4.00])
-recy = numpy.array([1.76])
+recx = numpy.array([2.03])
+recy = numpy.array([0.5])
 recz = numpy.array([1.62])
 rec = numpy.vstack((recx, recy, recz))  # dim:[3,n_rec]
 
